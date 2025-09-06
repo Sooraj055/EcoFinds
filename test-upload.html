@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Upload API</title>
+</head>
+<body>
+    <h1>Test EcoFinds Upload API</h1>
+    
+    <h2>Test Upload (No Auth Required)</h2>
+    <form id="testForm" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" required>
+        <button type="submit">Upload Test</button>
+    </form>
+    <div id="testResult"></div>
+
+    <h2>Test Upload (Auth Required)</h2>
+    <form id="authForm" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" required>
+        <input type="text" name="token" placeholder="Firebase Token (optional)" style="width: 300px;">
+        <button type="submit">Upload with Auth</button>
+    </form>
+    <div id="authResult"></div>
+
+    <h2>Test Upload (UID Only - Easy Testing)</h2>
+    <form id="uidForm" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" required>
+        <button type="submit">Upload with UID</button>
+    </form>
+    <div id="uidResult"></div>
+
+    <h2>Test Product Creation (UID Only)</h2>
+    <form id="productForm">
+        <input type="text" name="title" placeholder="Product Title" required style="width: 200px;">
+        <input type="text" name="description" placeholder="Description" required style="width: 200px;">
+        <input type="number" name="price" placeholder="Price" step="0.01" required style="width: 100px;">
+        <input type="text" name="category" placeholder="Category" required style="width: 150px;">
+        <input type="text" name="imageUrl" placeholder="Image URL (optional)" style="width: 200px;">
+        <input type="text" name="uid" placeholder="Your UID" required style="width: 200px;">
+        <button type="submit">Create Product</button>
+    </form>
+    <div id="productResult"></div>
+
+    <script>
+        // Test upload without auth
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('/api/upload/test', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                document.getElementById('testResult').innerHTML = 
+                    '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('testResult').innerHTML = 
+                    '<pre>Error: ' + error.message + '</pre>';
+            }
+        });
+
+        // Test upload with auth
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const token = formData.get('token');
+            
+            try {
+                const response = await fetch('/api/upload/image', {
+                    method: 'POST',
+                    headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+                    body: formData
+                });
+                const result = await response.json();
+                document.getElementById('authResult').innerHTML = 
+                    '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('authResult').innerHTML = 
+                    '<pre>Error: ' + error.message + '</pre>';
+            }
+        });
+
+        // Test upload with UID (easy testing)
+        document.getElementById('uidForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('/api/upload/test-uid', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                document.getElementById('uidResult').innerHTML = 
+                    '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('uidResult').innerHTML = 
+                    '<pre>Error: ' + error.message + '</pre>';
+            }
+        });
+
+        // Test product creation with UID
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/api/products/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                document.getElementById('productResult').innerHTML = 
+                    '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('productResult').innerHTML = 
+                    '<pre>Error: ' + error.message + '</pre>';
+            }
+        });
+    </script>
+</body>
+</html>

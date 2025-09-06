@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Users collection - users can read/write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Products collection
+    match /products/{productId} {
+      // Anyone can read active products
+      allow read: if resource.data.isActive == true;
+      
+      // Only authenticated users can create products
+      allow create: if request.auth != null 
+        && request.auth.uid == resource.data.ownerId
+        && request.auth.uid is string
+        && resource.data.title is string
+        && resource.data.description is string
+        && resource.data.price is number
+        && resource.data.price > 0
+        && resource.data.category is string
+        && resource.data.ownerId is string
+        && resource.data.isActive == true;
+      
+      // Only product owners can update their products
+      allow update: if request.auth != null 
+        && request.auth.uid == resource.data.ownerId
+        && request.auth.uid is string;
+      
+      // Only product owners can delete their products (soft delete)
+      allow delete: if request.auth != null 
+        && request.auth.uid == resource.data.ownerId;
+    }
+    
+    // Carts collection - users can only access their own cart
+    match /carts/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Orders collection - users can only access their own orders
+    match /orders/{orderId} {
+      allow read, write: if request.auth != null 
+        && (request.auth.uid == resource.data.buyerId || request.auth.uid == resource.data.sellerId);
+    }
+    
+    // Reviews collection - anyone can read, authenticated users can create
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if request.auth != null 
+        && request.auth.uid == resource.data.reviewerId
+        && request.auth.uid is string;
+      allow update, delete: if request.auth != null 
+        && request.auth.uid == resource.data.reviewerId;
+    }
+    
+    // Categories collection - read-only for all users
+    match /categories/{categoryId} {
+      allow read: if true;
+      // Only admins can write (you can add admin role checking here)
+      allow write: if false; // Disable for now, add admin check if needed
+    }
+    
+    // Admin collection - only for admin users (you can implement admin role checking)
+    match /admin/{document=**} {
+      allow read, write: if false; // Disable for now, implement admin role checking if needed
+    }
+  }
+}
